@@ -151,7 +151,7 @@ function loop() {
 
     flappy.draw();
     flappy.update();
-    mouseBoi.draw();  
+    //mouseBoi.draw();  
     managePipes();
     genericCollision();
 }
