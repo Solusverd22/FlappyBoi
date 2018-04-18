@@ -25,12 +25,39 @@ window.addEventListener('keydown',
         }
     })
 
+window.addEventListener('mousemove', function (e) {
+    var rect = canvas.getBoundingClientRect();
+    mouseBoi.x = e.clientX - rect.left,
+    mouseBoi.y = e.clientY - rect.top;
+});
+
 window.addEventListener('click', function (e) {yVel = -jumpSpeed})
+
+function Cube(x,y){
+    this.x = x;
+    this.y = y;
+    this.size = 30;
+
+    this.Left = this.x -this.size;
+    this.Right = this.x + this.size;
+    this.Bottom = this.x + this.size;
+    this.Top = this.x - this.size;
+
+    this.draw = function () {
+        ctx.fillRect(this.x - (this.size/2),this.y - (this.size/2),this.size,this.size);
+    }
+}
 
 function Bird(x, y, rotation) {
     this.x = x;
     this.y = y;
+
     this.rotation = rotation;
+
+    this.Left = this.x - imgFlappy.width/2;
+    this.Right = this.x + imgFlappy.width/2;
+    this.Top = this.y - imgFlappy.height/2;
+    this.Bottom = this.y + imgFlappy.height/2;
 
     this.draw = function () {
         //draw image
@@ -52,8 +79,8 @@ function Bird(x, y, rotation) {
         }
         if (yVel => 0){
             this.rotation = yVel/60; //the rotation should be between 0-0.3 as it represents PI*rotation radians
-            console.log("rotation: " + this.rotation);
-            console.log("yvel: " + yVel);
+            //console.log("rotation: " + this.rotation);
+            //console.log("yvel: " + yVel);
         }
     }
 }
@@ -61,6 +88,11 @@ function Bird(x, y, rotation) {
 function Pipe(x,y) {
     this.x = x;
     this.y = y;
+
+    this.Left = this.x - imgPipeDown.width/2;
+    this.Right = this.x + imgPipeDown.width/2;
+    this.Top = this.y - imgPipeDown.height/2;
+    this.Bottom = this.y + imgPipeDown.height/2;
 
     this.draw = function  () {
         //draw image
@@ -76,34 +108,55 @@ function Pipe(x,y) {
 }
 
 function managePipes() {
-
     for (var i = pipes.length - 1; i >= 0; i--) { //the for loop allows interaction with each pipe seperately
         if(pipes[i].x < -pipeWidth){
             pipes[i].x = pipeWidth*2; //this if   moves pipes that have fallen behind infront of the player
         }
-        pipes[i].update(); 
-    };
+        pipes[i].update();
+        checkCollision(i);
+    }
+}
+
+function checkCollision(i) {
+    if(!(pipes[i].Left > flappy.Right
+        || pipes[i].Right < flappy.Left
+        || pipes[i].Top > flappy.Bottom
+        || pipes[i].Bottom < flappy.Top)){
+            console.log("hit");
+        }
+}
+
+function genericCollision() {
+    if(!(mouseBoi.Left > flappy.Right
+        || mouseBoi.Right < flappy.Left
+        || mouseBoi.Top > flappy.Bottom
+        || mouseBoi.Bottom < flappy.Top)){
+            console.log("g hit");
+        }
 }
 
 var flappy = new Bird(100, 400, 0);
+var mouseBoi = new Cube(400,400);
+
 var pipes = []
 pipes[0] = new Pipe(pipeWidth, Math.random());
 pipes[1] = new Pipe(pipeWidth * 2, Math.random());
 pipes[2] = new Pipe(pipeWidth * 3, Math.random());
 
 
-function animate() {
-    requestAnimationFrame(animate);
+function loop() {
+    requestAnimationFrame(loop);
     //clears canvas every frame
     ctx.clearRect(0, 0, innerWidth, innerHeight);
 
     flappy.draw();
-    flappy.update();   
+    flappy.update();
+    mouseBoi.draw();  
     managePipes();
-
+    genericCollision();
 }
 
-animate();
+loop();
 
 
 ////three quads
