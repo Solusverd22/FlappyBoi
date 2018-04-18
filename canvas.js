@@ -6,6 +6,7 @@ canvas.height = 770;
 
 gravity = 0.3;
 pipeSpeed = 4;
+pipeWidth = 400;
 yVel = 0;
 var imgFlappy = new Image();
 var imgPipeUp = new Image();
@@ -16,11 +17,13 @@ imgPipeDown.src = "./images/pipe_down.png";
 
 window.addEventListener('keydown',
     function (e) {
-        console.log(e);
-        if(e.keyCode = 32){
+        console.log(e.key);
+        if(e.key == " "){
             yVel = - 8;
         }
     })
+
+window.addEventListener('click', function (e) {yVel = - 8})
 
 function Bird(x, y, rotation) {
     this.x = x;
@@ -29,11 +32,11 @@ function Bird(x, y, rotation) {
 
     this.draw = function () {
         //draw image
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(yVel * Math.PI); // rotates as it falls
-        ctx.drawImage(imgFlappy,0,0);
-        ctx.restore();
+        // ctx.save();
+        // ctx.translate(this.x, this.y);
+        // ctx.rotate(yVel * Math.PI); // rotates as it falls
+        ctx.drawImage(imgFlappy,this.x,this.y);
+        // ctx.restore();
     }
 
     this.update = function () {
@@ -45,7 +48,7 @@ function Bird(x, y, rotation) {
         }
         if (yVel => 0){
             this.rotation = yVel / 20;
-            console.log(this.rotation);
+            // console.log(this.rotation);
         }
     }
 }
