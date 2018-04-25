@@ -4,24 +4,35 @@ var ctx = canvas.getContext('2d');
 canvas.width = 480;
 canvas.height = 770;
 
-gravity = 0.8;
+gravity = 0.5;
 pipeSpeed = 4;
 pipeWidth = 400;
 yVel = 0;
-jumpSpeed = 14;
+jumpSpeed = 10;
+paused = true;
+StartDistance = 1000;
 
+//Image importing
 var imgFlappy = new Image();
 var imgPipeUp = new Image();
 var imgPipeDown = new Image();
 imgFlappy.src = "./images/flappy.png";
 imgPipeUp.src = "./images/pipe_up.png";
 imgPipeDown.src = "./images/pipe_down.png";
+//var imgHelp = new Image();
+//imgHelp.src = "./images/help.png";
 
 window.addEventListener('keydown',
     function (e) {
         //console.log(e.key);
-        if(e.key == " "){
+        if(e.key == " " && !paused){
             yVel = -jumpSpeed;
+            playEffect("sndFlap");
+        }
+
+        if(e.key == "Escape"){
+            paused = !paused;
+            playEffect("sndPause");
         }
     })
 
@@ -31,7 +42,7 @@ window.addEventListener('mousemove', function (e) {
     mouseBoi.y = e.clientY - rect.top;
 });
 
-window.addEventListener('click', function (e) {yVel = -jumpSpeed})
+window.addEventListener('click', function (e) {yVel = -jumpSpeed; playEffect("sndFlap");})
 
 function Cube(x,y){
     this.x = x;
@@ -78,7 +89,12 @@ function Bird(x, y, rotation) {
             yVel = 20;
         }
         if (yVel => 0){
-            this.rotation = yVel/60; //the rotation should be between 0-0.3 as it represents PI*rotation radians
+            //the range of yVel is between 0 -> 20
+            //we want rotation to be in the range -0.1 -> 0.3
+            //this.rotation = yVel/20*0.3; //this is the linear version 
+            //0 -> 0.3 looks like (x/20)^2*0.3
+            //-0.1 -> 0.3 looks like ((x/20)^2*0.4)-0.1
+            this.rotation = (Math.pow((yVel/20),3)*0.4)-0.1; //this is the smoothed version
             //console.log("rotation: " + this.rotation);
             //console.log("yvel: " + yVel);
         }
@@ -105,6 +121,12 @@ function Pipe(x,y) {
         this.x -= pipeSpeed;
         this.draw();
     }
+}
+
+function playEffect(ElementID){
+    const origAudio = document.getElementById(ElementID);
+    const newAudio = origAudio.cloneNode();
+    newAudio.play();
 }
 
 function managePipes() {
@@ -139,21 +161,29 @@ var flappy = new Bird(100, 400, 0);
 var mouseBoi = new Cube(400,400);
 
 var pipes = []
-pipes[0] = new Pipe(pipeWidth, Math.random());
-pipes[1] = new Pipe(pipeWidth * 2, Math.random());
-pipes[2] = new Pipe(pipeWidth * 3, Math.random());
+pipes[0] = new Pipe(StartDistance + pipeWidth, Math.random());
+pipes[1] = new Pipe(StartDistance + pipeWidth * 2, Math.random());
+pipes[2] = new Pipe(StartDistance + pipeWidth * 3, Math.random());
 
 
 function loop() {
     requestAnimationFrame(loop);
     //clears canvas every frame
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-
     flappy.draw();
-    flappy.update();
-    //mouseBoi.draw();  
-    managePipes();
-    genericCollision();
+    mouseBoi.draw();
+
+    if(!paused){    
+        flappy.update();
+        managePipes();
+        genericCollision();
+    }else{
+        ctx.font = "24px pixelfont";
+        ctx.fillStyle = "#D7E894";
+        ctx.textAlign = "center";
+        ctx.fillText("Press Escape to Unpause",canvas.width/2,canvas.height/4);
+        //ctx.drawImage(imgHelp,canvas.width/2 - imgHelp.width/2, canvas.height/4);
+    }
 }
 
 loop();
