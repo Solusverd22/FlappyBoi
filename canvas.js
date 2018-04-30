@@ -7,6 +7,7 @@ canvas.height = 770;
 gravity = 0.5;
 pipeSpeed = 4;
 pipeWidth = 300;
+pipeGap = 200;
 yVel = 0;
 jumpSpeed = 10;
 paused = false;
@@ -39,20 +40,20 @@ window.addEventListener('keydown',
         //console.log(e.key);
         if(e.key == " " && !paused){
             yVel = -jumpSpeed;
-            playEffect("sndFlap");
+            playEffect("sndFlap",Math.random()+1.5);
             started = true;
         }
 
         if(e.key == "Escape"){
             paused = !paused;
-            playEffect("sndPause");
+            playEffect("sndPause",2);
         }
     })
 
 window.addEventListener('click', function (e) {
     if(!paused){
         yVel = -jumpSpeed; 
-        playEffect("sndFlap");
+        playEffect("sndFlap",Math.random()+1.5);
         started = true;
     }
 })
@@ -111,19 +112,23 @@ function Pipe(x,y) {
 
     this.draw = function  () {
         //draw image
-        ctx.drawImage(imgPipeUp, this.x, -imgPipeDown.height/5 * this.y);
-        ctx.drawImage(imgPipeDown, this.x, this.midpoint + (imgPipeDown.height/5 * this.y));
+        sinOffset = Math.sin(this.y)*50;
+        console.debug(sinOffset);
+        yMid = -imgPipeDown.height/5;
+        ctx.drawImage(imgPipeUp, this.x, yMid +sinOffset);
+        ctx.drawImage(imgPipeDown, this.x, yMid + imgPipeDown.height + pipeGap + sinOffset);
     }
 
     this.update = function () {
         this.x -= pipeSpeed;
         if(this.x < -pipeWidth){
 			this.x = pipeWidth*2; //resets pipes that have fallen behind the player
-			this.y = Math.random(); //gets a new y offset
+			this.y = Score/5 + Math.random(); //gets a new y offset
         }
 
-        if(this.x >= canvas.width/2){
+        if(this.x == (flappy.x - 48)){
             Score += 1;
+            playEffect("sndPoint",1);
         }
     }
 }
@@ -157,10 +162,18 @@ function Background(image){
     }
 }
 
-function playEffect(ElementID){
+function playEffect(ElementID,playbackSpeed){
     const origAudio = document.getElementById(ElementID);
     const newAudio = origAudio.cloneNode();
+    newAudio.playbackRate = playbackSpeed;
     newAudio.play();
+}
+
+function drawScore(){
+    ctx.font = "36px pixelfont";
+    ctx.fillStyle = "#D7E894";
+    ctx.textAlign = "center";
+    ctx.fillText(Score,canvas.width/2,40);
 }
 
 function checkCollision(i) {
@@ -191,25 +204,26 @@ function updatePipes(){
 var flappy = new Bird(100, 400, 0);
 var backgrnd = new Background(imgBackground);
 var pipes = []
-pipes[0] = new Pipe(StartDistance + pipeWidth, Math.random());
-pipes[1] = new Pipe(StartDistance + pipeWidth * 2, Math.random());
-pipes[2] = new Pipe(StartDistance + pipeWidth * 3, Math.random());
+pipes[0] = new Pipe(StartDistance + pipeWidth, Score/5 + Math.random());
+pipes[1] = new Pipe(StartDistance + pipeWidth * 2, Score/5 + Math.random());
+pipes[2] = new Pipe(StartDistance + pipeWidth * 3, Score/5 + Math.random());
 
 
 function loop() {
     requestAnimationFrame(loop);
-    animate();
     //clears canvas every frame
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     backgrnd.draw();
     backgrnd.forceLoad();
     drawPipes();
     flappy.draw();
+    drawScore();
 
     if(!paused){
         flappy.update();
         backgrnd.update();
         updatePipes();
+        animate();
     }else{
         ctx.font = "24px pixelfont";
         ctx.fillStyle = "#D7E894";
